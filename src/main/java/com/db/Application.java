@@ -3,42 +3,37 @@ package com.db;
 import lib.Algo;
 import lib.SignalHandler;
 
-public class Application implements SignalHandler
-{
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class Application implements SignalHandler {
+
     private Algo algo;
+    private Map<Integer, SignalHandler> signalHandlersMap;
 
     public Application(Algo algo) {
         this.algo = algo;
+        this.signalHandlersMap = new ConcurrentHashMap<Integer, SignalHandler>();
     }
 
+    public void addSignalHandler(int signal, SignalHandler signalHandler) {
+        signalHandlersMap.put(signal, signalHandler);
+    }
+
+
+    @Override
     public void handleSignal(int signal) {
+        SignalHandler signalHandler;
 
-        switch (signal) {
-            case 1:
-                algo.setUp();
-                algo.setAlgoParam(1,60);
-                algo.performCalc();
-                algo.submitToMarket();
-                break;
-
-            case 2:
-                algo.reverse();
-                algo.setAlgoParam(1,80);
-                algo.submitToMarket();
-                break;
-
-            case 3:
-                algo.setAlgoParam(1,90);
-                algo.setAlgoParam(2,15);
-                algo.performCalc();
-                algo.submitToMarket();
-                break;
-
-            default:
-                algo.cancelTrades();
-                break;
+        if (signalHandlersMap.get(signal) != null) {
+            signalHandler = signalHandlersMap.get(signal);
+            signalHandler.handleSignal(signal);
+        } else {
+            algo.cancelTrades();
         }
 
         algo.doAlgo();
     }
+
 }
+
